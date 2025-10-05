@@ -1,5 +1,4 @@
 Step 1: Install Prometheus
-
 Download Prometheus:
 
 cd /opt
