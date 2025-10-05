@@ -4,7 +4,6 @@ sudo hostnamectl set-hostname master    # (on master VM)
 sudo hostnamectl set-hostname node1     # (on worker 1)
 sudo hostnamectl set-hostname node2     # (on worker 2)
 
-
 Edit /etc/hosts on all three VMs:
 sudo vim /etc/hosts
 
