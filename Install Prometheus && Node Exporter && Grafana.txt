@@ -1,0 +1,116 @@
+Step 1: Install Prometheus
+
+Download Prometheus:
+
+cd /opt
+sudo wget https://github.com/prometheus/prometheus/releases/download/v2.51.0/prometheus-2.51.0.linux-amd64.tar.gz
+sudo tar xvf prometheus-2.51.0.linux-amd64.tar.gz
+sudo mv prometheus-2.51.0.linux-amd64 prometheus
+
+
+Create a systemd service for Prometheus:
+
+sudo tee /etc/systemd/system/prometheus.service > /dev/null <<EOF
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+ExecStart=/opt/prometheus/prometheus \
+  --config.file=/opt/prometheus/prometheus.yml \
+  --storage.tsdb.path=/opt/prometheus/data
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+Start Prometheus:
+
+sudo systemctl daemon-reexec
+sudo systemctl enable --now prometheus
+sudo systemctl status Prometheus
+
+Step 2: Install Node Exporter
+
+Download Node Exporter:
+
+cd /opt
+sudo wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+sudo tar xvf node_exporter-1.7.0.linux-amd64.tar.gz
+sudo mv node_exporter-1.7.0.linux-amd64 node_exporter
+
+
+Create systemd service:
+
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<EOF
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+ExecStart=/opt/node_exporter/node_exporter
+
+[Install]
+WantedBy=default.target
+EOF
+
+
+Start Node Exporter:
+
+sudo systemctl daemon-reexec
+sudo systemctl enable --now node_exporter
+sudo systemctl status node_exporter
+
+Test Node Exporter:
+
+Open browser → http://<master-ip>:9100/metrics
+You should see CPU, memory, and disk metrics.
+
+Step 3: Configure Prometheus to scrape Node Exporter
+
+Edit Prometheus config:
+
+sudo vim /opt/prometheus/prometheus.yml
+
+
+Add the Node Exporter target:
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+
+
+Restart Prometheus:
+
+sudo systemctl restart prometheus
+
+Step 4: Install Grafana
+
+Install Grafana (on Ubuntu/Debian):
+
+sudo apt install -y software-properties-common wget
+wget -q -O - https://packages.grafana.com/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/grafana-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/grafana-archive-keyring.gpg] https://packages.grafana.com/oss/deb stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+
+
+sudo apt install -y grafana
+sudo systemctl enable --now grafana-server
+sudo systemctl status grafana-server
+
+Open Grafana in browser:
+http://<master-ip>:3000
+Default login: admin/admin
+
+Step 5: Connect Prometheus to Grafana
+
+Go to Configuration → Data Sources → Add Data Source → Prometheus
+
+URL: http://localhost:9090
+
+Click Save & Test → should succeed.

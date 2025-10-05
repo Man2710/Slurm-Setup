@@ -1,0 +1,81 @@
+Skip to main content
+Google Classroom
+Classroom
+ACC HPC
+SLURM CommandsSLURM Commands
+BASIC CLUSTER STATUS/INFO (MASTER NODE)
+---------------------------------------
+1. sinfo -o -
+2. sudo systemctl status slurmctld
+3. sinfo -N
+4. sinfo -N -l
+5. sudo systemctl status slurmd
+6. squeue
+7. squeue -u (username)
+8. squeue -p (partition_name)
+9. man salloc
+10. sbatch
+11. srun
+12. salloc -N 1 -n 4
+13. salloc
+14. scontrol show cluster
+
+NODE MANAGEMENT
+---------------
+15. scontrol update NodeName=[node name] State=draining
+16. scontrol update NodeName=[node name] State=resume
+
+USER/ACCOUNT MANAGEMENT (SYSTEM CONTROL)
+----------------------------------------
+17. sudo systemctl restart slurmctld
+18. sudo systemctl status slurmctld
+19. sudo systemctl restart slurmd
+20. sudo systemctl status slurmd
+21. sudo vi /etc/slurm/slurm.conf
+
+SACCTMGR (SLURM ACCOUNTING MANAGER)
+-----------------------------------
+22. sudo sacctmgr show status slurmctld
+23. sacctmgr show accounts
+24. sacctmgr create account name=physics description='... physics'
+25. sacctmgr create account name=physics name=... (Incomplete command)
+26. sacctmgr delete account physics
+27. sacctmgr show accounts
+28. sacctmgr create user name=user1 account=physics
+29. sacctmgr show user
+30. sacctmgr create cluster name=HPC
+31. sacctmgr create user name=user1 cluster=HPC account=parent_acc
+32. sacctmgr update user set level=none account=physics
+33. sacctmgr show user user1
+34. sudo sacctmgr show cluster
+
+JOB SUBMISSION/EXECUTION
+------------------------
+35. salloc
+36. srun ./hpcapi
+37. scancel (job_id)
+38. srun -n 4 ./hpcapi
+39. scancel -u (username)
+
+
+COMMON SLURM COMMANDS FOR EASY USE
+==================================
+- Job Submission: sbatch [script.sh]
+- Interactive Job: salloc -N 1 -n 4
+- Job Execution: srun [program]
+- Queue Status: squeue
+- User's Jobs: squeue -u $USER
+- Job Details: scontrol show job [job_id]
+- Job Cancellation: scancel [job_id]
+- Node Status: sinfo
+- Job History: sacct -j [job_id]
+SLURM Commands.txt
+Displaying SLURM Commands.txt.
+SLURM Commands
+Shivraj Waghmare
+•
+3 Oct
+
+SLURM Commands.txt
+Text
+Class comments

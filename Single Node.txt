@@ -1,0 +1,204 @@
+Step 1: Set Hostnames
+
+On Master VM:
+
+sudo hostnamectl set-hostname master
+
+
+On Worker VM:
+
+sudo hostnamectl set-hostname node
+
+Step 2: Edit /etc/hosts (on both nodes)
+
+Find IPs of your VMs:
+
+ip addr show
+
+
+Then edit hosts:
+
+sudo vim /etc/hosts
+
+
+Add at the bottom (use your real VM IPs):
+
+192.168.1.10 master
+192.168.1.11 node
+
+
+Save & exit.
+Restart your system and start VM again.
+
+Check:
+
+ping -c 2 master
+ping -c 2 node
+
+
+Both should reply correctly.
+
+Step 3: Install Basics
+
+On both:
+
+sudo apt update
+sudo apt install -y build-essential vim ssh net-tools
+
+Step 4: Setup Passwordless SSH (only on master)
+ssh-keygen -t rsa   # press Enter for all
+ssh-copy-id node
+
+
+Test:
+
+ssh node hostname
+
+
+Should return node.
+
+Step 5: Setup MUNGE
+
+On master:
+
+sudo apt install -y munge libmunge-dev libmunge2
+sudo mungekey --create
+sudo chown munge:munge /etc/munge/munge.key
+sudo chmod 400 /etc/munge/munge.key
+
+
+Copy key to worker:
+
+scp /etc/munge/munge.key man@node:/home/pavanraje/
+ssh node "sudo mv /home/man/munge.key /etc/munge/ && sudo chown munge:munge /etc/munge/munge.key && sudo chmod 400 /etc/munge/munge.key"
+
+
+Enable & start service (both):
+
+sudo systemctl enable munge
+sudo systemctl start munge
+
+
+
+Check:
+
+munge -n | unmunge
+munge -n | ssh node unmunge
+
+
+Step 6: Setup MariaDB (only master)
+sudo apt install -y mariadb-server mariadb-client
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+sudo mysql_secure_installation
+
+
+Create DB:
+
+sudo mysql -u root -p
+
+
+Inside MySQL:
+
+CREATE DATABASE slurm_acct_db;
+CREATE USER 'slurm'@'%' IDENTIFIED BY 'slurm_pass';
+GRANT ALL PRIVILEGES ON slurm_acct_db.* TO 'slurm'@'%';
+FLUSH PRIVILEGES;
+EXIT;
+
+Step 7: Install Slurm (all nodes)
+sudo apt install -y slurm-wlm slurmdbd
+
+
+Step 8: Configure Slurm
+
+On master:
+
+sudo nano /etc/slurm-llnl/slurm.conf
+                or
+sudo vim /etc/slurm-llnl/slurm.conf
+
+
+Paste:
+
+ClusterName=mycluster
+SlurmctldHost=master
+
+MpiDefault=none
+ProctrackType=proctrack/pgid
+ReturnToService=2
+SlurmctldTimeout=300
+SlurmdTimeout=300
+SlurmSchedLogLevel=3
+
+# Accounting
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost=master
+AccountingStoragePass=slurm_pass
+AccountingStorageUser=slurm
+JobAcctGatherType=jobacct_gather/linux
+JobAcctGatherFrequency=30
+
+# Nodes
+NodeName=master CPUs=2 State=UNKNOWN
+NodeName=node   CPUs=2 State=UNKNOWN
+PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+
+
+Copy config to worker:
+
+scp /etc/slurm/slurm.conf man@node:/home/manish/
+ssh node "sudo mv /home/man/slurm.conf /etc/slurm/slurm.conf/"
+slurm.conf  
+
+Step 9: Configure slurmdbd (master only)
+sudo nano /etc/slurm-llnl/slurmdbd.conf
+
+
+Paste:
+
+AuthType=auth/munge
+DbdHost=master
+DbdPort=6819
+SlurmUser=slurm
+DebugLevel=3
+StorageType=accounting_storage/mysql
+StorageHost=localhost
+StoragePass=slurm_pass
+StorageUser=slurm
+StorageLoc=slurm_acct_db
+
+
+Permissions:
+
+sudo chown slurm:slurm /etc/slurm-llnl/slurmdbd.conf
+sudo chmod 600 /etc/slurm-llnl/slurmdbd.conf
+
+Step 10: Start Services
+
+On master:
+
+sudo systemctl enable slurmdbd
+sudo systemctl start slurmdbd
+sudo systemctl enable slurmctld
+sudo systemctl start slurmctld
+
+
+On worker:
+
+sudo systemctl enable slurmd
+sudo systemctl start slurmd
+
+Step 11: Verify
+
+On master:
+
+sinfo
+scontrol show nodes
+srun -N2 hostname
+
+
+Expected:
+
+master
+node
