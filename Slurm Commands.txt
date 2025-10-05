@@ -1,8 +1,3 @@
-Skip to main content
-Google Classroom
-Classroom
-ACC HPC
-SLURM CommandsSLURM Commands
 BASIC CLUSTER STATUS/INFO (MASTER NODE)
 ---------------------------------------
 1. sinfo -o -
@@ -72,10 +67,3 @@ COMMON SLURM COMMANDS FOR EASY USE
 SLURM Commands.txt
 Displaying SLURM Commands.txt.
 SLURM Commands
-Shivraj Waghmare
-•
-3 Oct
-
-SLURM Commands.txt
-Text
-Class comments
