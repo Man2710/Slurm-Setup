@@ -64,6 +64,4 @@ COMMON SLURM COMMANDS FOR EASY USE
 - Job Cancellation: scancel [job_id]
 - Node Status: sinfo
 - Job History: sacct -j [job_id]
-SLURM Commands.txt
-Displaying SLURM Commands.txt.
-SLURM Commands
+
